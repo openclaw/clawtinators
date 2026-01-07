@@ -35,7 +35,6 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
-          S3_PREFIX: ${{ secrets.S3_PREFIX }}
         run: |
           key="$(scripts/upload-image.sh)"
           echo "S3_KEY=${key}" >> "${GITHUB_ENV}"

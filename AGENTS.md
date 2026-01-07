@@ -44,7 +44,7 @@ Deploy flow (automation-first):
 - Bootstrap S3 bucket + scoped IAM user + VM Import role with `infra/opentofu/aws` (use homelab-admin creds).
 - Import the image into AWS as an AMI (`aws ec2 import-image`).
 - Grab the host SSH key and add it to `../nix/nix-secrets/secrets.nix`; rekey secrets with agenix.
-- Ensure required secrets exist: `clawdinator-github-app.pem`, `clawdinator-discord-token`, `anthropic-api-key`.
+- Ensure required secrets exist: `clawdinator-github-app.pem`, `clawdinator-discord-token`, `clawdinator-anthropic-api-key`.
 - Update `nix/hosts/<host>.nix` (Discord allowlist, GitHub App installationId, identity name).
 - Ensure `/var/lib/clawd/repo` contains this repo (self-update requires it).
 - Verify systemd services: `clawdinator`, `clawdinator-github-app-token`, `clawdinator-self-update`.
@@ -53,4 +53,4 @@ Deploy flow (automation-first):
 Key principle: mental notes don’t survive restarts — write it to a file.
 
 Cattle vs pets: hosts are disposable. Prefer re-provisioning from OpenTofu + NixOS configs over in-place manual fixes.
-One way only: AWS AMI pipeline via S3 + VM Import. This is a greenfield repo. Do not reference "existing", "legacy", or alternate paths anywhere in code or docs.
+One way only: AWS AMI pipeline via S3 + VM Import. This is a greenfield repo. Do not reference alternate paths anywhere in code or docs.

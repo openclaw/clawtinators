@@ -1,41 +1,18 @@
-{ config, lib, pkgs, secrets, ... }:
+{ modulesPath, pkgs, ... }:
 {
-  imports = [ ../modules/clawdinator.nix ];
+  imports = [
+    (modulesPath + "/virtualisation/amazon-image.nix")
+    ../modules/clawdinator.nix
+  ];
 
   networking.hostName = "clawdinator-1";
-  networking.useDHCP = false;
-  networking.useNetworkd = true;
-  systemd.network.enable = true;
-  systemd.network.networks."10-wan" = {
-    matchConfig.Type = "ether";
-    networkConfig.DHCP = "yes";
-  };
   time.timeZone = "UTC";
   system.stateVersion = "26.05";
-
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.grub.enable = false;
-  boot.loader.efi.canTouchEfiVariables = false;
-  boot.loader.efi.efiSysMountPoint = "/boot";
-
-  fileSystems."/" = {
-    device = "/dev/disk/by-partlabel/disk-main-root";
-    fsType = "ext4";
-  };
-
-  fileSystems."/boot" = {
-    device = "/dev/disk/by-partlabel/disk-main-boot";
-    fsType = "vfat";
-  };
 
   nix.package = pkgs.nixVersions.stable;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  services.openssh.enable = true;
   networking.firewall.allowedTCPPorts = [ 22 18789 ];
-  users.users.root.openssh.authorizedKeys.keys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOLItFT3SVm5r7gELrfRRJxh6V2sf/BIx7HKXt6oVWpB"
-  ];
 
   age.identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
   age.secrets."clawdinator-github-app.pem" = {
@@ -43,8 +20,8 @@
     owner = "clawdinator";
     group = "clawdinator";
   };
-  age.secrets."clawdis-anthropic-api-key" = {
-    file = "/var/lib/clawd/nix-secrets/clawdis-anthropic-api-key.age";
+  age.secrets."clawdinator-anthropic-api-key" = {
+    file = "/var/lib/clawd/nix-secrets/clawdinator-anthropic-api-key.age";
     owner = "clawdinator";
     group = "clawdinator";
   };
@@ -88,7 +65,7 @@
       };
     };
 
-    anthropicApiKeyFile = "/run/agenix/clawdis-anthropic-api-key";
+    anthropicApiKeyFile = "/run/agenix/clawdinator-anthropic-api-key";
     discordTokenFile = "/run/agenix/clawdinator-discord-token";
 
     githubApp = {

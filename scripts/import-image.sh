@@ -7,6 +7,26 @@ region="${AWS_REGION:?AWS_REGION required}"
 
 boot_mode="legacy-bios"
 arch="${AMI_ARCH:-x86_64}"
+format="${IMAGE_FORMAT:-}"
+if [ -z "${format}" ]; then
+  ext="${key##*.}"
+  ext="$(printf '%s' "${ext}" | tr '[:upper:]' '[:lower:]')"
+  case "${ext}" in
+    img|raw)
+      format="raw"
+      ;;
+    vhd)
+      format="vhd"
+      ;;
+    vmdk)
+      format="vmdk"
+      ;;
+    *)
+      echo "Unable to infer image format from S3 key: ${key}" >&2
+      exit 1
+      ;;
+  esac
+fi
 
 timestamp="$(date -u +%Y%m%d%H%M%S)"
 ami_name="${AMI_NAME:-clawdinator-nixos-${timestamp}}"
@@ -19,7 +39,7 @@ task_id="$(
     --boot-mode "${boot_mode}" \
     --architecture "${arch}" \
     --role-name "vmimport" \
-    --disk-containers "Format=raw,UserBucket={S3Bucket=${bucket},S3Key=${key}}" \
+    --disk-containers "Format=${format},UserBucket={S3Bucket=${bucket},S3Key=${key}}" \
     --query 'ImportTaskId' \
     --output text
 )"

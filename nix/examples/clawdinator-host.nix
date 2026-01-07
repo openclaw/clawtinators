@@ -2,8 +2,8 @@
 {
   age.secrets."clawdinator-github-app.pem".file =
     "/var/lib/clawd/nix-secrets/clawdinator-github-app.pem.age";
-  age.secrets."clawdis-anthropic-api-key".file =
-    "/var/lib/clawd/nix-secrets/clawdis-anthropic-api-key.age";
+  age.secrets."clawdinator-anthropic-api-key".file =
+    "/var/lib/clawd/nix-secrets/clawdinator-anthropic-api-key.age";
   age.secrets."clawdinator-discord-token".file =
     "/var/lib/clawd/nix-secrets/clawdinator-discord-token.age";
 
@@ -40,7 +40,7 @@
       };
     };
 
-    anthropicApiKeyFile = "/run/agenix/clawdis-anthropic-api-key";
+    anthropicApiKeyFile = "/run/agenix/clawdinator-anthropic-api-key";
     discordTokenFile = "/run/agenix/clawdinator-discord-token";
 
     githubApp = {

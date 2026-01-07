@@ -44,7 +44,7 @@ Deploy (automation‑first):
 - Ensure `/var/lib/clawd/repo` contains this repo (needed for self‑update).
 - Configure Discord guild/channel allowlist and GitHub App installation ID.
 
-Image-based deploy (Option A, recommended):
+Image-based deploy (only path):
 1) Build a bootstrap image with nixos-generators:
    - `nix run github:nix-community/nixos-generators -- -f amazon -c nix/hosts/clawdinator-1-image.nix -o dist`
 2) Upload the raw image to S3 (private object).
