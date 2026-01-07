@@ -9,7 +9,7 @@ Principles:
 - Latest upstream nix‑clawdbot by default; breaking changes are acceptable.
 
 Stack:
-- Hetzner hosts provisioned with OpenTofu.
+- AWS AMIs built in CI (nixos-generators + import-image).
 - NixOS modules configure Clawdbot and CLAWDINATOR runtime.
 - Shared hive‑mind memory stored on a mounted host volume.
 
@@ -33,14 +33,13 @@ Secrets (required):
 - GitHub App private key (for short‑lived installation tokens).
 - Discord bot token (per instance).
 - Anthropic API key (Claude models).
-- Hetzner API token (OpenTofu).
+- AWS credentials (image pipeline + infra).
 
 Secrets are stored in `../nix/nix-secrets` using agenix and decrypted to `/run/agenix/*`
 on hosts. See `docs/SECRETS.md`.
 
 Deploy (automation‑first):
 - Prefer image-based provisioning for speed and repeatability.
-- `infra/opentofu` provisions Hetzner hosts from a custom image.
 - Host config lives in `nix/hosts/*` and is exposed in `flake.nix`.
 - Ensure `/var/lib/clawd/repo` contains this repo (needed for self‑update).
 - Configure Discord guild/channel allowlist and GitHub App installation ID.
@@ -48,21 +47,18 @@ Deploy (automation‑first):
 Image-based deploy (Option A, recommended):
 1) Build a bootstrap image with nixos-generators:
    - `nix run github:nix-community/nixos-generators -- -f raw-efi -c nix/hosts/clawdinator-1-image.nix -o dist`
-2) Compress the image:
-   - `zstd dist/nixos.img -o dist/nixos.img.zst`
-3) Upload the image to S3 (private object; use a presigned URL for import).
-4) Import into Hetzner:
-   - Use `hcloud-upload-image` (creates a snapshot image via a temporary server).
-5) Point OpenTofu at the image name or id and provision.
-6) Re-key agenix secrets to the new host SSH key and sync secrets to `/var/lib/clawd/nix-secrets`.
-7) Run `nixos-rebuild switch --flake /var/lib/clawd/repo#clawdinator-1`.
+2) Upload the raw image to S3 (private object).
+3) Import into AWS as an AMI (`aws ec2 import-image`).
+4) Launch hosts from the AMI.
+5) Re-key agenix secrets to the new host SSH key and sync secrets to `/var/lib/clawd/nix-secrets`.
+6) Run `nixos-rebuild switch --flake /var/lib/clawd/repo#clawdinator-1`.
 
 CI (recommended):
-- GitHub Actions builds the image, uploads to S3, and imports into Hetzner.
+- GitHub Actions builds the image, uploads to S3, and imports an AMI.
 - See `.github/workflows/image-build.yml` and `scripts/*.sh`.
 
 AWS bucket bootstrap:
-- `infra/opentofu/aws` provisions a private S3 bucket + scoped IAM user for CI uploads.
+- `infra/opentofu/aws` provisions a private S3 bucket + scoped IAM user + VM Import role.
 
 Docs:
 - `docs/PHILOSOPHY.md`
@@ -73,7 +69,7 @@ Docs:
 - `docs/SKILLS_AUDIT.md`
 
 Repo layout:
-- `infra/opentofu` — Hetzner provisioning
+- `infra/opentofu/aws` — S3 bucket + IAM + VM import role
 - `nix/modules/clawdinator.nix` — NixOS module
 - `nix/hosts/` — host configs
 - `nix/examples/` — example host + flake wiring

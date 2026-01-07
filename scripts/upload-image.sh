@@ -1,36 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-bucket="${S3_BUCKET:-}"
-region="${AWS_REGION:-}"
-prefix="${S3_PREFIX:-clawdinator-images}"
 out_dir="${OUT_DIR:-dist}"
+image_path="${out_dir}/nixos.img"
 
-if [ -z "${bucket}" ] || [ -z "${region}" ]; then
-  echo "S3_BUCKET and AWS_REGION are required." >&2
+if [ ! -f "${image_path}" ]; then
+  echo "Expected image at ${image_path}" >&2
   exit 1
 fi
 
-img_path="${out_dir}/nixos.img"
-tmp_dir="$(mktemp -d)"
-zst_path="${tmp_dir}/nixos.img.zst"
+bucket="${S3_BUCKET:?S3_BUCKET required}"
+region="${AWS_REGION:?AWS_REGION required}"
+prefix="${S3_PREFIX:-}"
 
-if [ ! -f "${img_path}" ]; then
-  echo "Missing ${img_path}. Run build-image.sh first." >&2
-  exit 1
+timestamp="$(date -u +%Y%m%d%H%M%S)"
+key_prefix="${prefix%/}"
+if [ -n "${key_prefix}" ]; then
+  key_prefix="${key_prefix}/"
 fi
+key="${key_prefix}clawdinator-nixos-${timestamp}.img"
 
-zstd -c "${img_path}" > "${zst_path}"
+aws s3 cp "${image_path}" "s3://${bucket}/${key}" \
+  --region "${region}" \
+  --only-show-errors
 
-timestamp="$(date -u +%Y%m%d-%H%M%S)"
-object_key="${prefix}/nixos-${timestamp}.img.zst"
-
-aws s3 cp "${zst_path}" "s3://${bucket}/${object_key}" --region "${region}" --only-show-errors 1>&2
-rm -rf "${tmp_dir}"
-
-if [ -n "${S3_PUBLIC_URL:-}" ]; then
-  echo "${S3_PUBLIC_URL}"
-  exit 0
-fi
-
-aws s3 presign "s3://${bucket}/${object_key}" --region "${region}" --expires-in 3600
+echo "${key}"

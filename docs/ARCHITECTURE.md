@@ -1,13 +1,13 @@
 # Architecture (Draft)
 
-Goal: declaratively spawn CLAWDINATOR instances on Hetzner using OpenTofu + NixOS.
+Goal: declaratively spawn CLAWDINATOR instances on AWS using OpenTofu + NixOS.
 
 Operating mode:
 - declarative-first, no manual setup
 - machines are created by automation (another CLAWDINATOR)
 
 Core pieces:
-- OpenTofu provisions Hetzner hosts from a prebuilt NixOS image.
+- AWS AMIs are built from a prebuilt NixOS image (nixos-generators + import-image).
 - NixOS modules configure clawdbot + CLAWDINATOR runtime on each host.
 - Shared memory is mounted at a consistent path on all hosts.
 
@@ -18,8 +18,7 @@ Runtime layout (planned):
 - /var/lib/clawd/repo (this repo for self-update)
 
 Storage:
-- POC uses one Hetzner volume per host, mounted at /var/lib/clawd.
-- Volume device path follows the host name (e.g. /dev/disk/by-id/scsi-0HC_Volume_clawdinator-1).
+- POC uses one host volume per instance (e.g., EBS), mounted at /var/lib/clawd.
 - In multi-host mode, add a shared filesystem or object-sync layer and keep canonical memory files authoritative.
 
 Instance naming:

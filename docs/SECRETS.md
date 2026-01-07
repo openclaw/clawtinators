@@ -3,14 +3,13 @@
 Principle: secrets never land in git. One secret per file, decrypted at runtime.
 
 Infrastructure (OpenTofu):
-- `HCLOUD_TOKEN` via environment variable (required).
+- AWS credentials via environment variable (required for `infra/opentofu/aws`).
 - Do NOT commit `*.tfvars` with secrets.
 
 Image pipeline (CI):
 - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION` / `S3_BUCKET` (required).
 - `S3_PREFIX` (optional).
-- `S3_PUBLIC_URL` (optional; if unset, use a presigned URL for a private object).
-- `HCLOUD_TOKEN` (required for `hcloud image create`).
+- `VMIMPORT_ROLE` (optional; defaults to `vmimport`).
 
 Local storage:
 - Keep AWS keys encrypted in `../nix/nix-secrets` for local runs if needed.
@@ -36,7 +35,7 @@ Agenix (local secrets repo):
 - Sync encrypted secrets to the host at `/var/lib/clawd/nix-secrets`.
 - Decrypt on host with agenix; point NixOS options at `/run/agenix/*`.
 - Required files (minimum): `clawdinator-github-app.pem.age`, `clawdinator-discord-token.age`, `clawdis-anthropic-api-key.age`.
-- CI image pipeline (stored locally, not on hosts): `clawdinator-image-uploader-access-key-id.age`, `clawdinator-image-uploader-secret-access-key.age`, `clawdinator-image-bucket-name.age`, `clawdinator-image-bucket-region.age`.
+- CI image pipeline (stored locally, not on hosts): `clawdinator-ami-importer-access-key-id.age`, `clawdinator-ami-importer-secret-access-key.age`, `clawdinator-image-bucket-name.age`, `clawdinator-image-bucket-region.age`.
 
 Example NixOS wiring (agenix):
 ```

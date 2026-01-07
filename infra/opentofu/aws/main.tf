@@ -42,16 +42,62 @@ resource "aws_s3_bucket_versioning" "image_bucket" {
   }
 }
 
-resource "aws_iam_user" "image_uploader" {
-  name = "clawdinator-image-uploader"
+data "aws_iam_policy_document" "vmimport_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["vmie.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "vmimport" {
+  name               = "vmimport"
+  assume_role_policy = data.aws_iam_policy_document.vmimport_assume.json
+  tags               = local.tags
+}
+
+data "aws_iam_policy_document" "vmimport" {
+  statement {
+    actions = [
+      "s3:GetBucketLocation",
+      "s3:GetObject",
+      "s3:ListBucket"
+    ]
+    resources = [
+      aws_s3_bucket.image_bucket.arn,
+      "${aws_s3_bucket.image_bucket.arn}/*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "ec2:ModifySnapshotAttribute",
+      "ec2:CopySnapshot",
+      "ec2:RegisterImage",
+      "ec2:Describe*"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "vmimport" {
+  name   = "clawdinator-vmimport"
+  role   = aws_iam_role.vmimport.id
+  policy = data.aws_iam_policy_document.vmimport.json
+}
+
+resource "aws_iam_user" "ami_importer" {
+  name = "clawdinator-ami-importer"
   tags = local.tags
 }
 
-resource "aws_iam_access_key" "image_uploader" {
-  user = aws_iam_user.image_uploader.name
+resource "aws_iam_access_key" "ami_importer" {
+  user = aws_iam_user.ami_importer.name
 }
 
-data "aws_iam_policy_document" "image_bucket_rw" {
+data "aws_iam_policy_document" "ami_importer" {
   statement {
     sid = "ListBucket"
     actions = [
@@ -72,10 +118,27 @@ data "aws_iam_policy_document" "image_bucket_rw" {
     ]
     resources = ["${aws_s3_bucket.image_bucket.arn}/*"]
   }
+
+  statement {
+    sid = "ImportImage"
+    actions = [
+      "ec2:ImportImage",
+      "ec2:DescribeImportImageTasks",
+      "ec2:DescribeImages",
+      "ec2:CreateTags"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "PassVmImportRole"
+    actions = ["iam:PassRole"]
+    resources = [aws_iam_role.vmimport.arn]
+  }
 }
 
-resource "aws_iam_user_policy" "image_uploader" {
-  name   = "clawdinator-image-bucket-rw"
-  user   = aws_iam_user.image_uploader.name
-  policy = data.aws_iam_policy_document.image_bucket_rw.json
+resource "aws_iam_user_policy" "ami_importer" {
+  name   = "clawdinator-ami-importer"
+  user   = aws_iam_user.ami_importer.name
+  policy = data.aws_iam_policy_document.ami_importer.json
 }

@@ -37,13 +37,12 @@ The Zen of ~~Python~~ Clawdbot, ~~by~~ shamelessly stolen from Tim Peters:
 - Namespaces are one honking great idea -- let's do more of those!
 
 Deploy flow (automation-first):
-- Use `devenv.nix` for tooling (hcloud, nixos-generators, zstd).
-- Build a bootstrap NixOS image with nixos-generators (raw-efi), compress it, and upload to a public URL.
+- Use `devenv.nix` for tooling (nixos-generators, awscli2).
+- Build a bootstrap NixOS image with nixos-generators (raw-efi) and upload it to S3.
   - Use `nix/hosts/clawdinator-1-image.nix` for image builds.
-- CI is preferred: `.github/workflows/image-build.yml` runs build → S3 upload → Hetzner import (via `hcloud-upload-image`).
-- Bootstrap S3 bucket + scoped IAM user with `infra/opentofu/aws` (use homelab-admin creds).
-- Import the image into Hetzner with `hcloud image create`.
-- Provision host with OpenTofu (`infra/opentofu`; set `HCLOUD_TOKEN`, no tfvars with secrets).
+- CI is preferred: `.github/workflows/image-build.yml` runs build → S3 upload → AMI import.
+- Bootstrap S3 bucket + scoped IAM user + VM Import role with `infra/opentofu/aws` (use homelab-admin creds).
+- Import the image into AWS as an AMI (`aws ec2 import-image`).
 - Grab the host SSH key and add it to `../nix/nix-secrets/secrets.nix`; rekey secrets with agenix.
 - Ensure required secrets exist: `clawdinator-github-app.pem`, `clawdinator-discord-token`, `anthropic-api-key`.
 - Update `nix/hosts/<host>.nix` (Discord allowlist, GitHub App installationId, identity name).
@@ -54,3 +53,4 @@ Deploy flow (automation-first):
 Key principle: mental notes don’t survive restarts — write it to a file.
 
 Cattle vs pets: hosts are disposable. Prefer re-provisioning from OpenTofu + NixOS configs over in-place manual fixes.
+One way only: AWS AMI pipeline via S3 + VM Import. No Hetzner, no rescue-mode hacks, no legacy paths.

@@ -24,9 +24,7 @@ jobs:
         run: |
           nix profile install \
             nixpkgs#nixos-generators \
-            nixpkgs#zstd \
-            nixpkgs#awscli2 \
-            nixpkgs#hcloud
+            nixpkgs#awscli2
 
       - name: Build image
         run: scripts/build-image.sh
@@ -38,15 +36,19 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
           S3_PREFIX: ${{ secrets.S3_PREFIX }}
-          S3_PUBLIC_URL: ${{ secrets.S3_PUBLIC_URL }}
         run: |
-          url="$(scripts/upload-image.sh)"
-          echo "IMAGE_URL=${url}" >> "${GITHUB_ENV}"
+          key="$(scripts/upload-image.sh)"
+          echo "S3_KEY=${key}" >> "${GITHUB_ENV}"
 
-      - name: Import image into Hetzner
+      - name: Import image into AMI
         env:
-          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
-          HCLOUD_LOCATION: nbg1
-          IMAGE_DESCRIPTION: clawdinator-nixos
-          IMAGE_LABELS: clawdinator=true
-        run: scripts/import-image.sh "${IMAGE_URL}"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          S3_KEY: ${{ env.S3_KEY }}
+          VMIMPORT_ROLE: ${{ secrets.VMIMPORT_ROLE }}
+          AMI_DESCRIPTION: clawdinator-nixos
+        run: |
+          ami_id="$(scripts/import-image.sh)"
+          echo "AMI_ID=${ami_id}" >> "${GITHUB_ENV}"
