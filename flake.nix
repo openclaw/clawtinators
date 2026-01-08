@@ -5,13 +5,9 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nix-clawdbot.url = "github:clawdbot/nix-clawdbot"; # latest upstream
     agenix.url = "github:ryantm/agenix";
-    secrets = {
-      url = "path:../nix/nix-secrets";
-      flake = false;
-    };
   };
 
-  outputs = { self, nixpkgs, nix-clawdbot, agenix, secrets }:
+  outputs = { self, nixpkgs, nix-clawdbot, agenix }:
     let
       lib = nixpkgs.lib;
       systems = [ "x86_64-linux" "aarch64-linux" ];
@@ -83,7 +79,6 @@
 
       nixosConfigurations.clawdinator-1 = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit secrets; };
         modules = [
           ({ ... }: { nixpkgs.overlays = [ self.overlays.default ]; })
           agenix.nixosModules.default
@@ -93,7 +88,6 @@
 
       nixosConfigurations.clawdinator-1-image = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit secrets; };
         modules = [
           ({ ... }: { nixpkgs.overlays = [ self.overlays.default ]; })
           agenix.nixosModules.default
