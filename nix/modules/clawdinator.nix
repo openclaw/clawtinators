@@ -555,7 +555,7 @@ in
         Group = cfg.group;
         EnvironmentFile = lib.optional cfg.githubApp.enable "-${cfg.githubApp.tokenEnvFile}";
       };
-      path = [ pkgs.gh pkgs.jq pkgs.coreutils pkgs.gnused ];
+      path = [ pkgs.bash pkgs.gh pkgs.jq pkgs.coreutils pkgs.gnused ];
       environment = {
         MEMORY_DIR = cfg.memoryDir;
         ORG = cfg.githubSync.org;
