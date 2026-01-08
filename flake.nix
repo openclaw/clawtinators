@@ -77,6 +77,21 @@
       overlays.clawdbotShebangFix = clawdbotShebangFix;
       overlays.default = lib.composeExtensions clawdbotOverlay clawdbotShebangFix;
 
+      packages = forAllSystems (system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [ self.overlays.default ];
+          };
+          gateway =
+            if pkgs ? clawdbot-gateway
+            then pkgs.clawdbot-gateway
+            else pkgs.clawdbot;
+        in {
+          clawdbot-gateway = gateway;
+          default = gateway;
+        });
+
       nixosConfigurations.clawdinator-1 = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
