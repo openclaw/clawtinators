@@ -1,6 +1,7 @@
 { pkgs }:
 {
   packages = [
+    pkgs.gh
     pkgs.git
     pkgs.curl
     pkgs.jq
@@ -15,6 +16,7 @@
   ];
 
   docs = [
+    { name = "gh"; description = "GitHub CLI for repo + PR inventory."; }
     { name = "clawdbot-gateway"; description = "CLAWDINATOR runtime (Clawdbot gateway)."; }
     { name = "git"; description = "Repo sync + ops."; }
     { name = "curl"; description = "HTTP requests."; }
