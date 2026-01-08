@@ -11,15 +11,8 @@ fi
 
 mkdir -p "$dst"
 
-shopt -s nullglob
-for file in "$src"/*.md; do
-  name="$(basename "$file")"
-  install -m 0644 "$file" "$dst/$name"
-
-done
+rsync -a --delete --exclude 'BOOTSTRAP.md' "$src/" "$dst/"
 
 if [ -f "/etc/clawdinator/tools.md" ]; then
   printf '\n%s\n' "$(cat /etc/clawdinator/tools.md)" >> "$dst/TOOLS.md"
 fi
-
-rm -f "$dst/BOOTSTRAP.md"

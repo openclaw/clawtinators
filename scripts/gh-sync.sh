@@ -17,7 +17,7 @@ log() {
 
 # Fetch all repos in org
 log "Fetching repos for $ORG..."
-repos=$(gh repo list "$ORG" --json nameWithOwner,name,description,isArchived --limit 100 -q '.[] | select(.isArchived == false) | .nameWithOwner')
+repos=$(gh repo list "$ORG" --json nameWithOwner,name,description,isArchived --limit 500 -q '.[] | select(.isArchived == false) | .nameWithOwner')
 
 if [ -z "$repos" ]; then
   log "ERROR: No repos found or gh auth failed"
@@ -53,7 +53,7 @@ for repo in $repos; do
   log "Processing $repo..."
 
   # Fetch open PRs (raw data, no filtering)
-  prs_json=$(gh pr list -R "$repo" --state open --json number,title,author,createdAt,updatedAt,reviewDecision,labels,isDraft,mergeable,headRefName,url --limit 100 2>/dev/null || echo "[]")
+  prs_json=$(gh pr list -R "$repo" --state open --json number,title,author,createdAt,updatedAt,reviewDecision,labels,isDraft,mergeable,headRefName,url --limit 200 2>/dev/null || echo "[]")
 
   pr_count=$(echo "$prs_json" | jq 'length')
   if [ "$pr_count" -gt 0 ]; then
@@ -64,7 +64,7 @@ for repo in $repos; do
   fi
 
   # Fetch open issues (excludes PRs)
-  issues_json=$(gh issue list -R "$repo" --state open --json number,title,author,createdAt,updatedAt,labels,comments,url --limit 100 2>/dev/null || echo "[]")
+  issues_json=$(gh issue list -R "$repo" --state open --json number,title,author,createdAt,updatedAt,labels,comments,url --limit 200 2>/dev/null || echo "[]")
 
   issue_count=$(echo "$issues_json" | jq 'length')
   if [ "$issue_count" -gt 0 ]; then

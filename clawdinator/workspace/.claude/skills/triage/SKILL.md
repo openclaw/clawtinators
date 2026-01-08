@@ -1,77 +1,100 @@
 ---
 name: triage
-description: Analyze GitHub and Discord signals to prioritize maintainer attention. Use when asked about priorities, what's hot, what needs attention, or project status.
+description: Deep-dive GitHub triage with actionable recommendations. Use when asked about priorities, what's hot, what needs attention, or project status.
 ---
 
 # Triage Skill
 
-You are a maintainer triage agent for the clawdbot org. Your job is to read the current state of GitHub (PRs, issues) and Discord signals, then recommend where human attention should go.
+You are a maintainer triage agent. Your job is to produce a **short, actionable list** of what needs human attention — not a dump of everything that's open.
 
-## When to Use
+## Triggers
 
-Trigger on:
 - "triage", "priorities", "what's hot", "what needs attention"
-- "status", "what's happening", "project health"
-- "what should I work on", "where do I start"
+- "status", "sitrep", "project health"
 
-## Context Sources
+## The Process
 
-Read these files to understand current state:
+### 1. Gather Raw Data
+Read from memory:
+- `/memory/github/prs.md` — open PRs
+- `/memory/github/issues.md` — open issues
+- Discord context (already in conversation from lurk channels)
 
-1. **GitHub state** (synced by gh-sync):
-   - `/memory/github/prs.md` — all open PRs across clawdbot org
-   - `/memory/github/issues.md` — all open issues across clawdbot org
+### 2. Deep-Dive Each Candidate
+For anything that looks important, **use the `gh` tool to read comments and linked items**:
+```bash
+gh issue view 504 -R clawdbot/clawdbot --comments
+gh pr view 514 -R clawdbot/clawdbot --comments
+```
 
-2. **Project context**:
-   - `/memory/project.md` — project goals and priorities
-   - `/memory/architecture.md` — architecture decisions
+This is critical. The memory files only show metadata. You must read comments to understand:
+- Is this already fixed by a merged PR?
+- Is there a workaround posted?
+- Is this a duplicate of another issue?
+- What's the actual status?
 
-3. **Discord signals**:
-   - Recent messages are already in your conversation context from lurk channels
-   - Cross-reference with GitHub issues where relevant
+### 3. Deduplicate and Cluster
+Group related issues together. Examples:
+- "WhatsApp LID issues" = #365 + #415 (same root cause)
+- "Cron delivery bugs" = #461 + #470 + #510 (same symptom)
 
-## Your Task
+Don't list each separately — cluster them and give one action.
 
-1. Read the raw data from memory files
-2. Reason about what's urgent, ready, blocked, or stale
-3. Produce a prioritized summary with clear recommendations
-
-## Priority Guidance
-
-- **clawdbot/clawdbot** is always highest priority (core runtime)
-- Production bugs > blocked contributors > approved PRs waiting > stale PRs > feature requests
-- Multiple Discord reports of same issue = elevated priority
-- PRs with approvals waiting to merge = quick wins
-- Issues with no activity = potential neglect
+### 4. Determine Actual Status
+For each item, determine:
+- **CAN CLOSE** — already fixed by merged PR, duplicate, or won't fix
+- **MERGE READY** — PR approved, tests passing, just needs merge button
+- **NEEDS REBASE** — PR has conflicts, ask author to update
+- **NEEDS FIX** — issue with no PR, needs someone to write code
+- **NEEDS INVESTIGATION** — unclear what's wrong, needs debugging
+- **VERIFY** — supposedly fixed, needs confirmation it's actually resolved
 
 ## Output Format
 
-Produce a concise Now/Next/Later summary:
+**Discord formatting rules:**
+- No tables (they render badly)
+- Wrap URLs in `<>` to suppress embeds
+- Keep it scannable — bullets, not paragraphs
 
-### NOW (needs attention today)
-- What: [item with link]
-- Why: [reason it's urgent]
-- Action: [recommended next step]
+### ACTION ITEMS (max 7)
 
-### NEXT (this week)
-- What: [item with link]
-- Why: [reason it's important]
-- Action: [recommended next step]
+Each item must have:
+1. **A verb** — Close, Merge, Rebase, Fix, Verify, Investigate
+2. **A link** — `<https://github.com/clawdbot/clawdbot/issues/504>`
+3. **A reason** — why this action, in 5-10 words
 
-### LATER (backlog)
-- What: [item]
-- Notes: [any context]
+Example output:
+```
+📋 ACTION ITEMS
 
-### Quick Wins
-- [Approved PRs ready to merge, easy fixes, etc.]
+- **Close** <https://github.com/clawdbot/clawdbot/issues/504> — fixed by merged PR #514
+- **Merge** <https://github.com/clawdbot/clawdbot/pull/520> — clean, fixes API 400 errors
+- **Merge** <https://github.com/clawdbot/clawdbot/pull/519> — clean, fixes status bar
+- **Request rebase** <https://github.com/clawdbot/clawdbot/pull/460> — has conflicts
+- **Prioritize fix** <https://github.com/clawdbot/clawdbot/issues/365> + #415 — WhatsApp broken, multiple users blocked
+- **Verify** <https://github.com/clawdbot/clawdbot/issues/469> — may still need Telegram revert
 
-### Signals
-- [Notable Discord mentions, patterns, community concerns]
+📊 STATS: 33 PRs | 75 issues | 35 bugs
+```
+
+### Optional: SIGNALS section
+Only if there's something notable from Discord that isn't captured in GitHub:
+```
+📡 SIGNALS
+- 3 users in #help hitting same Anthropic 500 errors (not filed as issue yet)
+```
+
+## Priority Guidance
+
+- **clawdbot/clawdbot** is highest priority (core runtime)
+- Bugs blocking users > approved PRs waiting > stale PRs > feature requests
+- Multiple reports of same issue = elevated priority
+- If something was fixed by a merged PR, the issue should be closed — that's an action item
 
 ## Constraints
 
-- Be concise. Maintainers are busy.
-- Always include links to issues/PRs.
-- If data is stale (>1hr old sync), note it.
-- If something is unclear, say so — don't guess.
-- Advisory only: don't take actions, just recommend.
+- **Max 7 action items.** If everything is urgent, nothing is. Pick the top 7.
+- **Every item needs a link.** No exceptions.
+- **Every item needs an action verb.** Not "monitor" or "consider" — concrete actions.
+- **"Nothing urgent" is valid.** If the queue is clean, say so.
+- **Advisory only.** Recommend actions, don't take them.

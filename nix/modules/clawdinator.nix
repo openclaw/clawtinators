@@ -456,7 +456,7 @@ in
         CLAWDIS_STATE_DIR = cfg.stateDir;
       };
 
-      path = [ pkgs.coreutils pkgs.git ];
+      path = [ pkgs.coreutils pkgs.git pkgs.rsync ];
       serviceConfig = {
         User = cfg.user;
         Group = cfg.group;
@@ -541,8 +541,14 @@ in
 
     systemd.services.clawdinator-github-sync = lib.mkIf cfg.githubSync.enable {
       description = "CLAWDINATOR GitHub org sync (PRs/issues to memory)";
-      after = [ "network-online.target" ] ++ lib.optional cfg.githubApp.enable "clawdinator-github-app-token.service";
-      wants = [ "network-online.target" ];
+      after =
+        [ "network-online.target" ]
+        ++ lib.optional cfg.githubApp.enable "clawdinator-github-app-token.service"
+        ++ lib.optional cfg.memoryEfs.enable "remote-fs.target"
+        ++ lib.optional cfg.memoryEfs.enable "clawdinator-memory-init.service";
+      wants =
+        [ "network-online.target" ]
+        ++ lib.optional cfg.memoryEfs.enable "remote-fs.target";
       serviceConfig = {
         Type = "oneshot";
         User = cfg.user;
