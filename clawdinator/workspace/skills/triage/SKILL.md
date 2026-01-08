@@ -32,9 +32,10 @@ Read these files to understand current state:
 
 ## Your Task
 
-1. Read the raw data from memory files
-2. Reason about what's urgent, ready, blocked, or stale
-3. Produce a prioritized summary with clear recommendations
+1. **Read AGENTS.md communication rules first** — they govern how you deliver output
+2. Read the raw data from memory files
+3. Reason about what's urgent, ready, blocked, or stale
+4. Produce a prioritized summary with clear recommendations
 
 ## Priority Guidance
 
