@@ -209,6 +209,12 @@ in
       description = "Repos to seed into repoSeedBaseDir on startup.";
     };
 
+    repoSeedSnapshotDir = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = "Optional path to a preseeded repo snapshot (directory of repos). When set, no network cloning happens at boot.";
+    };
+
     workspaceTemplateDir = mkOption {
       type = types.path;
       default = ../../clawdinator/workspace;
@@ -450,8 +456,13 @@ in
     systemd.services.clawdinator = {
       description = "CLAWDINATOR (Clawdbot gateway)";
       wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" ] ++ lib.optional cfg.githubApp.enable "clawdinator-github-app-token.service";
-      wants = lib.optional cfg.githubApp.enable "clawdinator-github-app-token.service";
+      after =
+        [ "network.target" ]
+        ++ lib.optional cfg.githubApp.enable "clawdinator-github-app-token.service"
+        ++ lib.optional (cfg.repoSeedSnapshotDir != null) "clawdinator-repo-seed.service";
+      wants =
+        lib.optional cfg.githubApp.enable "clawdinator-github-app-token.service"
+        ++ lib.optional (cfg.repoSeedSnapshotDir != null) "clawdinator-repo-seed.service";
 
       environment = {
         CLAWDBOT_CONFIG_PATH = configPath;
@@ -470,10 +481,13 @@ in
         Group = cfg.group;
         WorkingDirectory = cfg.stateDir;
         EnvironmentFile = lib.optional cfg.githubApp.enable "-${cfg.githubApp.tokenEnvFile}";
-        ExecStartPre = [
-          "${pkgs.bash}/bin/bash ${../../scripts/seed-repos.sh} ${repoSeedsFile} ${repoSeedBaseDir}"
-          "${pkgs.bash}/bin/bash ${../../scripts/seed-workspace.sh} ${cfg.workspaceTemplateDir} ${workspaceDir}"
-        ];
+        ExecStartPre =
+          lib.optionals (cfg.repoSeedSnapshotDir == null) [
+            "${pkgs.bash}/bin/bash ${../../scripts/seed-repos.sh} ${repoSeedsFile} ${repoSeedBaseDir}"
+          ]
+          ++ [
+            "${pkgs.bash}/bin/bash ${../../scripts/seed-workspace.sh} ${cfg.workspaceTemplateDir} ${workspaceDir}"
+          ];
         ExecStart =
           if tokenWrapper != null
           then "${tokenWrapper}/bin/clawdinator-gateway"
@@ -483,6 +497,19 @@ in
         StandardOutput = "append:${logDir}/gateway.log";
         StandardError = "append:${logDir}/gateway.log";
       };
+    };
+
+    systemd.services.clawdinator-repo-seed = lib.mkIf (cfg.repoSeedSnapshotDir != null) {
+      description = "CLAWDINATOR repo seed (snapshot copy)";
+      wantedBy = [ "multi-user.target" ];
+      before = [ "clawdinator.service" ];
+      after = [ "local-fs.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+      };
+      path = [ pkgs.rsync pkgs.coreutils ];
+      script = "${pkgs.bash}/bin/bash ${../../scripts/seed-repos-from-snapshot.sh} ${cfg.repoSeedSnapshotDir} ${repoSeedBaseDir} ${cfg.user} ${cfg.group}";
     };
 
     systemd.services.clawdinator-efs-stunnel = lib.mkIf cfg.memoryEfs.enable {

@@ -21,3 +21,6 @@ nix/age-secrets/
 # Nix build outputs
 result
 result-*
+
+# Repo seed workspace
+repo-seeds/

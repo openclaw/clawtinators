@@ -39,7 +39,9 @@ jobs:
         run: |
           nix profile install \
             nixpkgs#nixos-generators \
-            nixpkgs#awscli2
+            nixpkgs#awscli2 \
+            nixpkgs#age \
+            nixpkgs#jq
 
       - name: Write agenix image key
         env:
@@ -65,6 +67,24 @@ jobs:
           do
             test -f "$file"
           done
+
+      - name: Mint GitHub App token
+        env:
+          GITHUB_APP_ID: "2607181"
+          GITHUB_APP_INSTALLATION_ID: "102951645"
+        run: |
+          age -d -i nix/keys/clawdinator.agekey \
+            -o /tmp/clawdinator-github-app.pem \
+            nix/age-secrets/clawdinator-github-app.pem.age
+          export GITHUB_APP_PEM_FILE=/tmp/clawdinator-github-app.pem
+          token="$(scripts/mint-github-app-token.sh)"
+          echo "GITHUB_TOKEN=${token}" >> "${GITHUB_ENV}"
+
+      - name: Prepare repo seeds
+        env:
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        run: |
+          scripts/prepare-repo-seeds.sh repo-seeds
 
       - name: Build image
         run: scripts/build-image.sh

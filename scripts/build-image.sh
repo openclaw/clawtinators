@@ -27,6 +27,16 @@ if [ -z "${CLAWDINATOR_SECRETS_DIR:-}" ]; then
   fi
 fi
 
+if [ -z "${CLAWDINATOR_REPO_SEEDS_DIR:-}" ]; then
+  if [ -d repo-seeds ]; then
+    export CLAWDINATOR_REPO_SEEDS_DIR
+    CLAWDINATOR_REPO_SEEDS_DIR="$(pwd)/repo-seeds"
+  else
+    echo "Missing repo-seeds; set CLAWDINATOR_REPO_SEEDS_DIR" >&2
+    exit 1
+  fi
+fi
+
 nix run --impure github:nix-community/nixos-generators -- --flake "${flake_ref}" -f "${format}" -o "${out_dir}"
 
 out_real="${out_dir}"

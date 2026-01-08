@@ -1,6 +1,23 @@
 { lib, config, ... }:
 let
   secretsPath = config.clawdinator.secretsPath;
+  repoSeedsFile = ../../clawdinator/repos.tsv;
+  repoSeedLines =
+    lib.filter
+      (line: line != "" && !lib.hasPrefix "#" line)
+      (map lib.strings.trim (lib.splitString "\n" (lib.fileContents repoSeedsFile)));
+  parseRepoSeed = line:
+    let
+      parts = lib.splitString "\t" line;
+      name = lib.elemAt parts 0;
+      url = lib.elemAt parts 1;
+      branch =
+        if (lib.length parts) > 2 && (lib.elemAt parts 2) != ""
+        then lib.elemAt parts 2
+        else null;
+    in
+    { inherit name url branch; };
+  repoSeeds = map parseRepoSeed repoSeedLines;
 in
 {
   options.clawdinator.secretsPath = lib.mkOption {
@@ -36,28 +53,7 @@ in
         region = "eu-central-1";
         mountPoint = "/memory";
       };
-      repoSeeds = [
-        {
-          name = "clawdbot";
-          url = "https://github.com/clawdbot/clawdbot.git";
-        }
-        {
-          name = "nix-clawdbot";
-          url = "https://github.com/clawdbot/nix-clawdbot.git";
-        }
-        {
-          name = "clawdinators";
-          url = "https://github.com/clawdbot/clawdinators.git";
-        }
-        {
-          name = "clawdhub";
-          url = "https://github.com/clawdbot/clawdhub.git";
-        }
-        {
-          name = "nix-steipete-tools";
-          url = "https://github.com/clawdbot/nix-steipete-tools.git";
-        }
-      ];
+      repoSeeds = repoSeeds;
 
       config = {
         gateway.mode = "local";

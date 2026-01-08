@@ -30,6 +30,10 @@
       assertion = (builtins.getEnv "CLAWDINATOR_SECRETS_DIR") != "";
       message = "CLAWDINATOR_SECRETS_DIR must point at encrypted age secrets.";
     }
+    {
+      assertion = (builtins.getEnv "CLAWDINATOR_REPO_SEEDS_DIR") != "";
+      message = "CLAWDINATOR_REPO_SEEDS_DIR must point at preseeded repos.";
+    }
   ];
 
   environment.etc."agenix/keys/clawdinator.agekey" = {
@@ -44,4 +48,15 @@
     path = builtins.toPath (builtins.getEnv "CLAWDINATOR_SECRETS_DIR");
     name = "clawdinator-age-secrets";
   });
+
+  services.clawdinator.repoSeedSnapshotDir =
+    let
+      seedsDir = builtins.getEnv "CLAWDINATOR_REPO_SEEDS_DIR";
+    in
+    if seedsDir == ""
+    then null
+    else builtins.path {
+      path = builtins.toPath seedsDir;
+      name = "clawdinator-repo-seeds";
+    };
 }
