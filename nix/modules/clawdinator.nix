@@ -426,7 +426,8 @@ in
     systemd.services.clawdinator = {
       description = "CLAWDINATOR (Clawdbot gateway)";
       wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" ];
+      after = [ "network.target" ] ++ lib.optional cfg.githubApp.enable "clawdinator-github-app-token.service";
+      wants = lib.optional cfg.githubApp.enable "clawdinator-github-app-token.service";
 
       environment = {
         CLAWDBOT_CONFIG_PATH = configPath;
@@ -502,6 +503,10 @@ in
 
     systemd.services.clawdinator-github-app-token = lib.mkIf cfg.githubApp.enable {
       description = "CLAWDINATOR GitHub App token refresh";
+      wantedBy = [ "multi-user.target" ];
+      before = [ "clawdinator.service" ];
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
       serviceConfig = {
         Type = "oneshot";
         User = "root";
