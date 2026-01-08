@@ -99,9 +99,10 @@ These are seeded on boot into `/var/lib/clawd/repos`.
 |------|--------|-------|
 | clawdbot/clawdbot | RO | the bot itself |
 | clawdbot/nix-clawdbot | RW | packaging for clawdinators |
-| clawdbot/clawdinators | RW | this infra. self-modify here. |
 | clawdbot/clawdhub | RW | skills hub |
 | clawdbot/nix-steipete-tools | RW | packaged tools |
+
+The CLAWDINATORS repo itself is the live flake at `/var/lib/clawd/repo` (self-modify there).
 
 ## Clawdinators system:
 System ownership (3 repos):
