@@ -29,6 +29,8 @@ jobs:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
           restore-prefixes-first-match: |
             nix-${{ runner.os }}-
+          paths-linux: |
+            /nix/store
 
       - name: Free disk space
         run: |
