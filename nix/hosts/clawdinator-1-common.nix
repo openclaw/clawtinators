@@ -102,7 +102,7 @@ in
         ];
         logging = {
           level = "info";
-          file = "/var/lib/clawd/logs/clawbot.log";
+          file = "/var/lib/clawd/logs/openclaw.log";
         };
         session.sendPolicy = {
           default = "allow";

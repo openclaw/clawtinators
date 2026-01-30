@@ -28,16 +28,16 @@
             overlays = [ self.overlays.default ];
           };
           gateway =
-            if pkgs ? moltbot-gateway
-            then pkgs.moltbot-gateway
-            else pkgs.moltbot;
+            if pkgs ? openclaw-gateway
+            then pkgs.openclaw-gateway
+            else pkgs.openclaw;
           systemPackages =
             if system == "x86_64-linux" then {
               clawdinator-system = self.nixosConfigurations.clawdinator-1.config.system.build.toplevel;
               clawdinator-image-system = self.nixosConfigurations.clawdinator-1-image.config.system.build.toplevel;
             } else {};
         in {
-          moltbot-gateway = gateway;
+          openclaw-gateway = gateway;
           default = gateway;
         } // systemPackages);
 

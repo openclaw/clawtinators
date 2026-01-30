@@ -33,4 +33,4 @@ Deliverables:
 
 Nix wiring notes:
 - Apply nix-openclaw overlay (latest upstream).
-- Enable services.clawdinator and provide moltbot.json config.
+- Enable services.clawdinator and provide openclaw.json config.

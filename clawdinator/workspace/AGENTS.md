@@ -247,7 +247,7 @@ The ID is shown in message context as `user id:XXXXX`.
 
 **Code blocks:** Use triple backticks with language hint:
 \`\`\`bash
-moltbot gateway restart  # binary is still called moltbot
+openclaw gateway restart  
 \`\`\`
 
 \`\`\`json5

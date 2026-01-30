@@ -21,7 +21,7 @@
   docs = [
     { name = "bash"; description = "Shell runtime for CLAWDINATOR scripts."; }
     { name = "gh"; description = "GitHub CLI for repo + PR inventory."; }
-    { name = "moltbot-gateway"; description = "CLAWDINATOR runtime (Clawbot gateway)."; }
+    { name = "openclaw-gateway"; description = "CLAWDINATOR runtime (Clawbot gateway)."; }
     { name = "git"; description = "Repo sync + ops."; }
     { name = "curl"; description = "HTTP requests."; }
     { name = "jq"; description = "JSON processing."; }

@@ -5,7 +5,7 @@ let
   configSource =
     if cfg.configFile != null
     then cfg.configFile
-    else pkgs.writeText "moltbot.json" (builtins.toJSON cfg.config);
+    else pkgs.writeText "openclaw.json" (builtins.toJSON cfg.config);
 
   updateScript = pkgs.writeShellScript "clawdinator-self-update" ''
     set -euo pipefail
@@ -66,11 +66,11 @@ let
   '';
 
   defaultPackage =
-    if pkgs ? moltbot-gateway
-    then pkgs.moltbot-gateway
-    else pkgs.moltbot;
+    if pkgs ? openclaw-gateway
+    then pkgs.openclaw-gateway
+    else pkgs.openclaw;
 
-  configPath = "/etc/clawd/moltbot.json";
+  configPath = "/etc/clawd/openclaw.json";
   workspaceDir = "${cfg.stateDir}/workspace";
   repoSeedBaseDir = cfg.repoSeedBaseDir;
   logDir = "${cfg.stateDir}/logs";
@@ -118,7 +118,7 @@ let
         ${lib.optionalString (cfg.githubPatFile != null) "read_token \"GITHUB_TOKEN GH_TOKEN\" \"${cfg.githubPatFile}\""}
         ${lib.optionalString (cfg.openaiApiKeyFile != null) "read_token \"OPENAI_API_KEY OPEN_AI_APIKEY\" \"${cfg.openaiApiKeyFile}\""}
 
-        exec "${cfg.package}/bin/moltbot" gateway --port ${toString cfg.gatewayPort}
+        exec "${cfg.package}/bin/openclaw" gateway --port ${toString cfg.gatewayPort}
       ''
     else
       null;
@@ -282,13 +282,13 @@ in
     config = mkOption {
       type = types.attrs;
       default = {};
-      description = "Raw Clawbot config JSON (merged into moltbot.json).";
+      description = "Raw Clawbot config JSON (merged into openclaw.json).";
     };
 
     configFile = mkOption {
       type = types.nullOr types.path;
       default = null;
-      description = "Optional path to a moltbot.json config file. Overrides config attr.";
+      description = "Optional path to an openclaw.json config file. Overrides config attr.";
     };
 
     cronJobsFile = mkOption {
@@ -419,8 +419,8 @@ in
 
     assertions = [
       {
-        assertion = (pkgs ? moltbot-gateway) || (pkgs ? moltbot);
-        message = "services.clawdinator requires nix-openclaw overlay (pkgs.moltbot-gateway).";
+        assertion = (pkgs ? openclaw-gateway) || (pkgs ? openclaw);
+        message = "services.clawdinator requires nix-openclaw overlay (pkgs.openclaw-gateway).";
       }
       {
         assertion = cfg.githubApp.enable || cfg.githubPatFile != null;
@@ -454,7 +454,7 @@ in
         (pkgs.writeShellScriptBin "memory-edit" ''exec /etc/clawdinator/bin/memory-edit "$@"'')
       ];
 
-    environment.etc."clawd/moltbot.json".source = configSource;
+    environment.etc."clawd/openclaw.json".source = configSource;
     environment.etc."clawd/cron-jobs.json" = lib.mkIf (cfg.cronJobsFile != null) {
       source = cfg.cronJobsFile;
       mode = "0644";
@@ -609,7 +609,7 @@ in
         ExecStart =
           if tokenWrapper != null
           then "${tokenWrapper}/bin/clawdinator-gateway"
-          else "${cfg.package}/bin/moltbot gateway --port ${toString cfg.gatewayPort}";
+          else "${cfg.package}/bin/openclaw gateway --port ${toString cfg.gatewayPort}";
         Restart = "always";
         RestartSec = 2;
         StandardOutput = "append:${logDir}/gateway.log";
