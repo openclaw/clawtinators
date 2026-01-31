@@ -23,10 +23,17 @@ See `maintainers.md` — **NEVER auto-close PRs from org members.** Refresh peri
 | File | Use case |
 |------|----------|
 | `pr-closure.md` | Closing a PR unlikely to merge (5 variants) |
+| `pr-approval.md` | PR approved / ready to ship |
+| `pr-needs-changes.md` | PR needs changes |
+| `pr-stale.md` | PR stale / closing |
 | `maintainers.md` | Org member allowlist (never auto-close) |
 
 ## Gifs
 
 | File | Use case |
 |------|----------|
-| `gifs/t2-thumbsup.gif` | PR closure — Arnie thumbs-up sinking into molten steel |
+| `gifs/closing-thumbs-up-lava.gif` | PR closure — Arnie thumbs-up sinking into molten steel |
+| `gifs/approval-get-to-the-choppa.gif` | PR approval — GET TO THE CHOPPA |
+| `gifs/needs-changes-clothes-boots.gif` | PR needs changes — "I need your clothes, your boots..." |
+| `gifs/stale-pr-hasta-la-vista.gif` | PR stale — Hasta la vista |
+| `gifs/t2-thumbsup.gif` | (Legacy) PR closure — Arnie thumbs-up sinking into molten steel |

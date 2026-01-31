@@ -6,7 +6,7 @@ Pick one per closure. Rotate for variety.
 
 ## Variant A — "The Classic"
 
-Suggested gif: Arnie thumbs-up sinking into molten steel (T2)
+Suggested gif: closing-thumbs-up-lava.gif
 
 ---
 
@@ -28,7 +28,7 @@ I'll be back. Stay br00tal.
 
 ## Variant B — "Hasta La Vista"
 
-Suggested gif: Arnie "Hasta la vista, baby" (T2)
+Suggested gif: stale-pr-hasta-la-vista.gif
 
 ---
 
@@ -50,7 +50,7 @@ Stay br00tal.
 
 ## Variant C — "The Choppa"
 
-Suggested gif: Arnie "GET TO THE CHOPPA" (Predator)
+Suggested gif: approval-get-to-the-choppa.gif
 
 ---
 
