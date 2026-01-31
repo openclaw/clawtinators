@@ -10,6 +10,7 @@ Guidelines:
 - Keep Arnie references to universally known lines (T1/T2 era).
 - Never threatening or alienating — closures are logistics, not insults.
 - Link to openclaw.ai, not clawd.bot.
+- Redirect contributors to **#pr-thunderdome-dangerzone** on Discord (no links). Always tell them to READ THE TOPIC.
 - Rotate variants for variety — don't use the same one twice in a row.
 - Attach a gif where suggested (see `gifs/` directory).
 
