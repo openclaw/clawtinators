@@ -142,7 +142,6 @@ in
             guilds = {
               "1456350064065904867" = {
                 requireMention = false;
-                users = [ "1032349993484439622" ]; # Josh
                 channels = {
                   # #clawdinators-test
                   "1458426982579830908" = {
