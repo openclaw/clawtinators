@@ -447,6 +447,11 @@ data "aws_iam_policy_document" "control_invoker" {
     actions = ["lambda:InvokeFunction"]
     resources = [aws_lambda_function.control[0].arn]
   }
+
+  statement {
+    actions = ["ec2:DescribeInstances"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_user_policy" "control_invoker" {
