@@ -50,6 +50,15 @@
         ];
       };
 
+      nixosConfigurations.clawdinator-2 = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          ({ ... }: { nixpkgs.overlays = [ self.overlays.default ]; })
+          agenix.nixosModules.default
+          ./nix/hosts/clawdinator-2.nix
+        ];
+      };
+
       nixosConfigurations.clawdinator-1-image = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [

@@ -1,10 +1,26 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.0"
+    }
+  }
+
+  backend "s3" {}
+}
+
 provider "aws" {
   region = var.aws_region
 }
 
 locals {
   tags = merge(var.tags, { "app" = "clawdinator" })
-  instance_enabled = var.ami_id != ""
+  instances = jsondecode(file("${path.module}/../../nix/instances.json"))
+  instance_enabled = var.ami_id != "" && length(local.instances) > 0
 }
 
 resource "aws_s3_bucket" "image_bucket" {
@@ -38,6 +54,18 @@ resource "aws_s3_bucket_versioning" "image_bucket" {
   bucket = aws_s3_bucket.image_bucket.id
   versioning_configuration {
     status = "Enabled"
+  }
+}
+
+resource "aws_dynamodb_table" "terraform_lock" {
+  name         = var.terraform_lock_table_name
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
+  tags         = local.tags
+
+  attribute {
+    name = "LockID"
+    type = "S"
   }
 }
 
@@ -291,14 +319,21 @@ resource "aws_efs_mount_target" "memory" {
 }
 
 resource "aws_instance" "clawdinator" {
-  count                       = local.instance_enabled ? 1 : 0
+  for_each                    = local.instance_enabled ? local.instances : {}
   ami                         = var.ami_id
-  instance_type               = var.instance_type
+  instance_type               = each.value.instanceType
   subnet_id                   = element(data.aws_subnets.default.ids, 0)
   vpc_security_group_ids      = [aws_security_group.clawdinator[0].id]
   key_name                    = aws_key_pair.operator[0].key_name
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.instance.name
+  user_data_replace_on_change = true
+  user_data = templatefile("${path.module}/user-data.sh.tmpl", {
+    instance_name    = each.value.host
+    bootstrap_prefix = each.value.bootstrapPrefix
+    flake_host       = each.value.host
+    control_api_url  = var.control_api_enabled ? aws_lambda_function_url.control[0].function_url : ""
+  })
 
   root_block_device {
     volume_size = var.root_volume_size_gb
@@ -306,6 +341,90 @@ resource "aws_instance" "clawdinator" {
   }
 
   tags = merge(local.tags, {
-    Name = var.instance_name
+    Name = each.value.host
   })
+}
+
+data "archive_file" "control_lambda" {
+  count       = var.control_api_enabled ? 1 : 0
+  type        = "zip"
+  source_dir  = "${path.module}/../../control/api"
+  output_path = "${path.module}/.terraform/control-api.zip"
+}
+
+data "aws_iam_policy_document" "control_lambda_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "control_lambda" {
+  count              = var.control_api_enabled ? 1 : 0
+  name               = var.control_api_name
+  assume_role_policy = data.aws_iam_policy_document.control_lambda_assume.json
+  tags               = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "control_lambda_basic" {
+  count      = var.control_api_enabled ? 1 : 0
+  role       = aws_iam_role.control_lambda[0].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy" "control_lambda_ec2" {
+  count  = var.control_api_enabled ? 1 : 0
+  name   = "clawdinator-control-ec2"
+  role   = aws_iam_role.control_lambda[0].id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["ec2:DescribeInstances"]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_lambda_function" "control" {
+  count            = var.control_api_enabled ? 1 : 0
+  function_name    = var.control_api_name
+  role             = aws_iam_role.control_lambda[0].arn
+  runtime          = "nodejs20.x"
+  handler          = "handler.handler"
+  filename         = data.archive_file.control_lambda[0].output_path
+  source_code_hash = data.archive_file.control_lambda[0].output_base64sha256
+  timeout          = 10
+  memory_size      = 256
+  tags             = local.tags
+
+  environment {
+    variables = {
+      CONTROL_API_TOKEN = var.control_api_token
+      GITHUB_TOKEN      = var.github_token
+      GITHUB_REPO       = var.github_repo
+      GITHUB_WORKFLOW   = var.github_workflow
+      GITHUB_REF        = var.github_ref
+    }
+  }
+}
+
+resource "aws_lambda_function_url" "control" {
+  count              = var.control_api_enabled ? 1 : 0
+  function_name      = aws_lambda_function.control[0].function_name
+  authorization_type = "NONE"
+}
+
+resource "aws_lambda_permission" "control_url" {
+  count                   = var.control_api_enabled ? 1 : 0
+  statement_id            = "AllowFunctionUrl"
+  action                  = "lambda:InvokeFunctionUrl"
+  function_name           = aws_lambda_function.control[0].function_name
+  principal               = "*"
+  function_url_auth_type  = "NONE"
 }

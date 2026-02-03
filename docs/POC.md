@@ -24,7 +24,7 @@ Image pipeline:
 - Runtime: explicit token files via agenix (standard).
 - GitHub token is required. Prefer GitHub App (`services.clawdinator.githubApp.*`) to mint short-lived tokens.
 - Store PEM and tokens in the local secrets repo (see docs/SECRETS.md) and decrypt to `/run/agenix/*`.
-- Discord token is required: set `services.clawdinator.discordTokenFile` to `/run/agenix/clawdinator-discord-token`.
+- Discord token is required: set `services.clawdinator.discordTokenFile` to `/run/agenix/clawdinator-discord-token-<n>`.
 
 Deliverables:
 - Infra code in infra/opentofu/aws.

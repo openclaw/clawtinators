@@ -6,7 +6,7 @@
     ./clawdinator-common.nix
   ];
 
-  networking.hostName = "clawdinator-1";
+  networking.hostName = "clawdinator-2";
   time.timeZone = "UTC";
   system.stateVersion = "26.05";
 
@@ -20,5 +20,4 @@
   ];
 
   networking.firewall.allowedTCPPorts = [ 22 ];
-
 }

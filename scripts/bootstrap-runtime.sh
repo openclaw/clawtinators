@@ -4,6 +4,14 @@ set -euo pipefail
 bucket="${1:?S3 bucket required}"
 prefix="${2:?S3 prefix required}"
 secrets_dir="${3:?Secrets dir required}"
+
+override_file="${BOOTSTRAP_PREFIX_FILE:-/etc/clawdinator/bootstrap-prefix}"
+if [ -f "${override_file}" ]; then
+  override_prefix="$(cat "${override_file}")"
+  if [ -n "${override_prefix}" ]; then
+    prefix="${override_prefix}"
+  fi
+fi
 repo_seeds_dir="${4:?Repo seeds dir required}"
 age_key_path="${5:?Age key path required}"
 secrets_archive="${6:-secrets.tar.zst}"

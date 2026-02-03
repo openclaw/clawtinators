@@ -64,14 +64,7 @@ jobs:
         run: |
           mkdir -p nix/age-secrets
           aws s3 sync "s3://${S3_BUCKET}/age-secrets" nix/age-secrets
-          for file in \
-            nix/age-secrets/clawdinator-github-app.pem.age \
-            nix/age-secrets/clawdinator-discord-token.age \
-            nix/age-secrets/clawdinator-anthropic-api-key.age \
-            nix/age-secrets/clawdinator-openai-api-key-peter-2.age
-          do
-            test -f "$file"
-          done
+          bash scripts/validate-age-secrets.sh
 
       - name: Mint GitHub App token
         env:
@@ -91,15 +84,14 @@ jobs:
         run: |
           scripts/prepare-repo-seeds.sh repo-seeds
 
-      - name: Upload bootstrap bundle
+      - name: Upload bootstrap bundles
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
-          BOOTSTRAP_PREFIX: bootstrap/clawdinator-1
         run: |
-          bash scripts/upload-bootstrap.sh
+          bash scripts/upload-bootstrap-all.sh
 
       - name: Build image
         run: scripts/build-image.sh

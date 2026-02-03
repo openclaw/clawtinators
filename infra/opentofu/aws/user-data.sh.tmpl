@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+instance_name="${instance_name}"
+bootstrap_prefix="${bootstrap_prefix}"
+flake_host="${flake_host}"
+control_api_url="${control_api_url}"
+
+install -d -m 0755 /etc/clawdinator
+printf '%s' "${instance_name}" > /etc/clawdinator/instance-name
+printf '%s' "${bootstrap_prefix}" > /etc/clawdinator/bootstrap-prefix
+if [ -n "${control_api_url}" ]; then
+  printf '%s' "${control_api_url}" > /etc/clawdinator/control-api-url
+fi
+
+systemctl stop clawdinator.service || true
+systemctl daemon-reload
+
+systemctl start clawdinator-bootstrap.service
+systemctl start clawdinator-repo-seed.service
+
+if [ ! -d /var/lib/clawd/repos/clawdinators ]; then
+  echo "clawdinator repo missing after bootstrap" >&2
+  exit 1
+fi
+
+nixos-rebuild switch --flake /var/lib/clawd/repos/clawdinators#${flake_host}

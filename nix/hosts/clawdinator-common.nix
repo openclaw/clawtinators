@@ -1,6 +1,15 @@
 { lib, config, ... }:
 let
+  cfg = config.services.clawdinator;
   secretsPath = config.clawdinator.secretsPath;
+  instancesFile = ../instances.json;
+  instances = builtins.fromJSON (builtins.readFile instancesFile);
+  hostName = config.networking.hostName;
+  instance =
+    if builtins.hasAttr hostName instances
+    then instances.${hostName}
+    else throw "clawdinator: missing instance ${hostName} in ${instancesFile}";
+  discordTokenSecret = instance.discordTokenSecret;
   repoSeedsFile = ../../clawdinator/repos.tsv;
   repoSeedLines =
     lib.filter
@@ -46,8 +55,13 @@ in
       owner = "clawdinator";
       group = "clawdinator";
     };
-    age.secrets."clawdinator-discord-token" = {
-      file = "${secretsPath}/clawdinator-discord-token.age";
+    age.secrets."${discordTokenSecret}" = {
+      file = "${secretsPath}/${discordTokenSecret}.age";
+      owner = "clawdinator";
+      group = "clawdinator";
+    };
+    age.secrets."clawdinator-control-token" = {
+      file = "${secretsPath}/clawdinator-control-token.age";
       owner = "clawdinator";
       group = "clawdinator";
     };
@@ -64,13 +78,13 @@ in
 
     services.clawdinator = {
       enable = true;
-      instanceName = "CLAWDINATOR-1";
+      instanceName = lib.toUpper hostName;
       memoryDir = "/memory";
       repoSeedSnapshotDir = "/var/lib/clawd/repo-seeds";
       bootstrap = {
         enable = true;
         s3Bucket = "clawdinator-images-eu1-20260107165216";
-        s3Prefix = "bootstrap/clawdinator-1";
+        s3Prefix = instance.bootstrapPrefix;
         region = "eu-central-1";
         secretsDir = "/var/lib/clawd/nix-secrets";
         repoSeedsDir = "/var/lib/clawd/repo-seeds";
@@ -109,7 +123,7 @@ in
           {
             id = "main";
             default = true;
-            identity.name = "CLAWDINATOR-1";
+            identity.name = cfg.instanceName;
           }
         ];
         logging = {
@@ -188,7 +202,7 @@ in
 
       anthropicApiKeyFile = "/run/agenix/clawdinator-anthropic-api-key";
       openaiApiKeyFile = "/run/agenix/clawdinator-openai-api-key-peter-2";
-      discordTokenFile = "/run/agenix/clawdinator-discord-token";
+      discordTokenFile = "/run/agenix/${discordTokenSecret}";
       telegramAllowFromFile = "/run/agenix/clawdinator-telegram-allow-from";
 
       githubApp = {
@@ -201,7 +215,7 @@ in
 
       selfUpdate.enable = true;
       selfUpdate.flakePath = "/var/lib/clawd/repos/clawdinators";
-      selfUpdate.flakeHost = "clawdinator-1";
+      selfUpdate.flakeHost = hostName;
 
       githubSync.enable = true;
       githubSync.org = "openclaw";

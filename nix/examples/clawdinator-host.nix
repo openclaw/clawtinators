@@ -6,8 +6,10 @@
     "/var/lib/clawd/nix-secrets/clawdinator-anthropic-api-key.age";
   age.secrets."clawdinator-openai-api-key-peter-2".file =
     "/var/lib/clawd/nix-secrets/clawdinator-openai-api-key-peter-2.age";
-  age.secrets."clawdinator-discord-token".file =
-    "/var/lib/clawd/nix-secrets/clawdinator-discord-token.age";
+  age.secrets."clawdinator-discord-token-1".file =
+    "/var/lib/clawd/nix-secrets/clawdinator-discord-token-1.age";
+  age.secrets."clawdinator-control-token".file =
+    "/var/lib/clawd/nix-secrets/clawdinator-control-token.age";
   age.secrets."clawdinator-telegram-bot-token".file =
     "/var/lib/clawd/nix-secrets/clawdinator-telegram-bot-token.age";
   age.secrets."clawdinator-telegram-allow-from".file =
@@ -76,7 +78,7 @@
 
     anthropicApiKeyFile = "/run/agenix/clawdinator-anthropic-api-key";
     openaiApiKeyFile = "/run/agenix/clawdinator-openai-api-key-peter-2";
-    discordTokenFile = "/run/agenix/clawdinator-discord-token";
+    discordTokenFile = "/run/agenix/clawdinator-discord-token-1";
     telegramAllowFromFile = "/run/agenix/clawdinator-telegram-allow-from";
 
     githubApp = {

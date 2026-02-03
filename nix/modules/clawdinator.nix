@@ -696,8 +696,8 @@ in
     systemd.services.clawdinator-bootstrap = lib.mkIf cfg.bootstrap.enable {
       description = "CLAWDINATOR bootstrap (S3 secrets + repo seeds)";
       wantedBy = [ "multi-user.target" ];
-      after = [ "network-online.target" ];
-      wants = [ "network-online.target" ];
+      after = [ "network-online.target" "amazon-init.service" ];
+      wants = [ "network-online.target" "amazon-init.service" ];
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;

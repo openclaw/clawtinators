@@ -23,19 +23,19 @@ output "secret_access_key" {
   description = "Use in CI as AWS_SECRET_ACCESS_KEY."
 }
 
-output "instance_id" {
-  value       = local.instance_enabled ? aws_instance.clawdinator[0].id : null
-  description = "CLAWDINATOR instance ID."
+output "instance_ids" {
+  value       = { for name, inst in aws_instance.clawdinator : name => inst.id }
+  description = "CLAWDINATOR instance IDs by name."
 }
 
-output "instance_public_ip" {
-  value       = local.instance_enabled ? aws_instance.clawdinator[0].public_ip : null
-  description = "CLAWDINATOR public IP."
+output "instance_public_ips" {
+  value       = { for name, inst in aws_instance.clawdinator : name => inst.public_ip }
+  description = "CLAWDINATOR public IPs by name."
 }
 
 output "instance_public_dns" {
-  value       = local.instance_enabled ? aws_instance.clawdinator[0].public_dns : null
-  description = "CLAWDINATOR public DNS."
+  value       = { for name, inst in aws_instance.clawdinator : name => inst.public_dns }
+  description = "CLAWDINATOR public DNS by name."
 }
 
 output "efs_file_system_id" {
@@ -46,4 +46,9 @@ output "efs_file_system_id" {
 output "efs_security_group_id" {
   value       = aws_security_group.efs.id
   description = "Security group ID for EFS."
+}
+
+output "control_api_url" {
+  value       = var.control_api_enabled ? aws_lambda_function_url.control[0].function_url : null
+  description = "Control-plane API Lambda URL."
 }

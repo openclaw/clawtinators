@@ -3,7 +3,7 @@
     (modulesPath + "/virtualisation/ec2-data.nix")
     (modulesPath + "/virtualisation/amazon-init.nix")
     ../modules/clawdinator.nix
-    ./clawdinator-1-common.nix
+    ./clawdinator-common.nix
   ];
 
   networking.hostName = "clawdinator-1";

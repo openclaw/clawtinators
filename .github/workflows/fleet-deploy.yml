@@ -1,0 +1,59 @@
+name: Fleet Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "all or instance id"
+        required: true
+      ami_override:
+        description: "Optional AMI override"
+        required: false
+        default: ""
+
+jobs:
+  fleet:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: fleet-deploy
+      cancel-in-progress: false
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      S3_BUCKET: ${{ secrets.S3_BUCKET }}
+      SSH_PUBLIC_KEY: ${{ secrets.CLAWDINATOR_SSH_PUBLIC_KEY }}
+      TF_BACKEND_BUCKET: ${{ secrets.S3_BUCKET }}
+      TF_BACKEND_KEY: state/clawdinators.tfstate
+      TF_BACKEND_REGION: ${{ secrets.AWS_REGION }}
+      TF_BACKEND_DYNAMO_TABLE: clawdinator-terraform-locks
+      TF_VAR_control_api_enabled: true
+      TF_VAR_control_api_token: ${{ secrets.CONTROL_API_TOKEN }}
+      TF_VAR_github_token: ${{ secrets.GITHUB_WORKFLOW_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+
+      - name: Install tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Resolve AMI
+        run: |
+          if [ -n "${{ inputs.ami_override }}" ]; then
+            echo "AMI_ID=${{ inputs.ami_override }}" >> "$GITHUB_ENV"
+          else
+            ami_id="$(AWS_REGION=${AWS_REGION} bash scripts/resolve-latest-ami.sh)"
+            echo "AMI_ID=${ami_id}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Deploy fleet
+        env:
+          TARGET: ${{ inputs.target }}
+          AMI_ID: ${{ env.AMI_ID }}
+        run: |
+          bash scripts/fleet-deploy.sh

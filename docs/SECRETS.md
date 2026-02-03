@@ -10,12 +10,20 @@ Image pipeline (CI):
 - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION` / `S3_BUCKET` (required).
 - `CLAWDINATOR_AGE_KEY` (required; used to build the bootstrap bundle uploaded to S3).
 
+Control plane (OOB):
+- `control_api_token` (Lambda env or OpenTofu variable; stored as `clawdinator-control-token.age`).
+- `github_token` (workflow dispatch PAT).
+
+Runtime control (CLAWDINATOR):
+- `clawdinator-control-token.age` is injected to `/run/agenix/clawdinator-control-token` and used by `/fleet`.
+- Token is shared across instances (KISS); policy enforcement happens in the skill.
+
 Local storage:
 - Keep AWS keys encrypted in `../nix/nix-secrets` for local runs if needed.
 - CI pulls credentials from GitHub Actions secrets (never from host files).
 
 Runtime (CLAWDINATOR):
-- Discord bot token (required, per instance).
+- Discord bot token (required, per instance; `clawdinator-discord-token-<n>.age`).
 - Telegram bot token (required if Telegram channel is enabled).
 - GitHub token (required): GitHub App installation token (preferred) or a read-only PAT.
 - Anthropic API key (required for Claude models).
@@ -44,10 +52,10 @@ Agenix (local secrets repo):
 - Sync encrypted secrets to the host at `/var/lib/clawd/nix-secrets`.
 - Decrypt on host with agenix; point NixOS options at `/run/agenix/*`.
 - Image builds do **not** bake the agenix identity; the age key is injected at runtime via the bootstrap bundle.
-- Required files (minimum): `clawdinator-github-app.pem.age`, `clawdinator-discord-token.age`, `clawdinator-anthropic-api-key.age`.
+- Required files (minimum): `clawdinator-github-app.pem.age`, `clawdinator-anthropic-api-key.age`, `clawdinator-openai-api-key-peter-2.age`, `clawdinator-control-token.age`.
+- Required per instance: `clawdinator-discord-token-1.age`, `clawdinator-discord-token-2.age` (one per instance).
 - Required for Telegram: `clawdinator-telegram-bot-token.age` (when Telegram is enabled).
 - Telegram allowlist (if using allowFrom secrets): `clawdinator-telegram-allow-from.age`.
-- Also required for OpenAI: `clawdinator-openai-api-key-peter-2.age`.
 - CI image pipeline (stored locally, not on hosts): `clawdinator-image-uploader-access-key-id.age`, `clawdinator-image-uploader-secret-access-key.age`, `clawdinator-image-bucket-name.age`, `clawdinator-image-bucket-region.age`.
 
 Bootstrap bundle (runtime injection):
@@ -69,8 +77,10 @@ Example NixOS wiring (agenix):
     "/var/lib/clawd/nix-secrets/clawdinator-anthropic-api-key.age";
   age.secrets."clawdinator-openai-api-key-peter-2".file =
     "/var/lib/clawd/nix-secrets/clawdinator-openai-api-key-peter-2.age";
-  age.secrets."clawdinator-discord-token".file =
-    "/var/lib/clawd/nix-secrets/clawdinator-discord-token.age";
+  age.secrets."clawdinator-discord-token-1".file =
+    "/var/lib/clawd/nix-secrets/clawdinator-discord-token-1.age";
+  age.secrets."clawdinator-control-token".file =
+    "/var/lib/clawd/nix-secrets/clawdinator-control-token.age";
   age.secrets."clawdinator-telegram-bot-token".file =
     "/var/lib/clawd/nix-secrets/clawdinator-telegram-bot-token.age";
   age.secrets."clawdinator-telegram-allow-from".file =
@@ -83,7 +93,7 @@ Example NixOS wiring (agenix):
   services.clawdinator.openaiApiKeyFile =
     "/run/agenix/clawdinator-openai-api-key-peter-2";
   services.clawdinator.discordTokenFile =
-    "/run/agenix/clawdinator-discord-token";
+    "/run/agenix/clawdinator-discord-token-1";
   services.clawdinator.telegramAllowFromFile =
     "/run/agenix/clawdinator-telegram-allow-from";
 

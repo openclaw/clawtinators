@@ -70,7 +70,7 @@ Deploy flow (automation-first):
 - Bootstrap AWS instances from the AMI with `infra/opentofu/aws` (set `TF_VAR_ami_id`).
 - Import the image into AWS as an AMI (snapshot import + register image).
 - Ensure secrets are encrypted to the baked agenix key (see `../nix/nix-secrets/secrets.nix`).
-- Ensure required secrets exist: `clawdinator-github-app.pem`, `clawdinator-discord-token`, `clawdinator-anthropic-api-key`.
+- Ensure required secrets exist: `clawdinator-github-app.pem`, `clawdinator-discord-token-<n>`, `clawdinator-control-token`, `clawdinator-anthropic-api-key`.
 - Update `nix/hosts/<host>.nix` (Discord allowlist, GitHub App installationId, identity name).
 - Discord must use `messages.queue.byChannel.discord = "interrupt"`; `queue` delays replies to heartbeat and makes the bot appear dead.
 - Ensure `/var/lib/clawd/repos/clawdinators` contains this repo (self-update requires it).
@@ -109,7 +109,7 @@ End-to-end SDLC (local → AMI → host) **(verified)**:
 4) Redeploy from the new AMI (instance replacement):
    - `devenv shell -- bash -lc "cd infra/opentofu/aws && TF_VAR_ami_id=<AMI_ID> TF_VAR_ssh_public_key=\"$(cat ~/.ssh/id_ed25519.pub)\" TF_VAR_aws_region=eu-central-1 tofu apply -auto-approve"`
 5) New IP:
-   - `jq -r '.outputs.instance_public_ip.value' infra/opentofu/aws/terraform.tfstate`
+   - `tofu output -json instance_public_ips | jq -r '."clawdinator-1"'`
    - `ssh -o StrictHostKeyChecking=accept-new root@<ip>`
 6) Post-deploy sanity:
    - `systemctl is-active clawdinator`
