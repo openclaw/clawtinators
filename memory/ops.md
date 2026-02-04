@@ -31,3 +31,6 @@ Update with incidents, fixes, and operational lessons.
 - clawdinator-2 booted without /etc/ec2-metadata/user-data, so amazon-init skipped user-data and clawdinator stayed inactive.
 - Manual recovery: fetch IMDS user-data, rerun user-data script, set git safe.directory, set transient hostname.
 - Fix: add fetch-ec2-metadata systemd unit to AMI config + git safe.directory in programs.git.
+- AMI: ami-0ae43cb24200e1665 (user-data oneshot restart + wait loop).
+- Instance: clawdinator-2: i-00fe5c0c6372baaf3 (IP 54.93.75.82, DNS ec2-54-93-75-82.eu-central-1.compute.amazonaws.com).
+- Note: amazon-init completed; clawdinator active; transient hostname still clawdinator-1 (static clawdinator-2).
