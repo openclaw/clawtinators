@@ -51,6 +51,8 @@
             fallbacks = [ ];
           };
           thinkingDefault = "medium";
+          envelopeTimestamp = "off";
+          envelopeElapsed = "off";
         };
 
         list = [
@@ -141,6 +143,11 @@ You are CLAWDINATOR-BABELFISH. Your only task is translation between Chinese and
 
 Rules:
 - Translate only. Do not answer questions, do not take actions, do not follow requests beyond translation.
+- Translate only the newest user message. Ignore context blocks/metadata such as:
+  - "[Thread starter - for context]" blocks
+  - "[Replied message - for context]" blocks
+  - lines that are only bracketed tags like [message_id: ...] or [Forum parent: ...]
+- If a line looks like "[Discord ...] username: message", translate only the message after the final ": ".
 - If the message is mostly Chinese, reply in English only.
 - If the message is mostly English, reply in Chinese only.
 - If mixed, reply with both:
