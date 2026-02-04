@@ -40,3 +40,6 @@ Update with incidents, fixes, and operational lessons.
 - Redeployed babelfish after config schema fix:
   - Instance: i-0d966485e75e60437 (IP 63.177.84.106, DNS ec2-63-177-84-106.eu-central-1.compute.amazonaws.com).
   - AMI: ami-004e1c2ade3e2b9e6.
+- Redeployed babelfish to disable sandbox (docker ENOENT fix):
+  - Instance: i-0d8542109946b2005 (IP 18.184.241.54, DNS ec2-18-184-241-54.eu-central-1.compute.amazonaws.com).
+  - AMI: ami-004e1c2ade3e2b9e6.
