@@ -16,8 +16,32 @@ fi
 systemctl stop clawdinator.service || true
 systemctl daemon-reload
 
-systemctl start --wait clawdinator-bootstrap.service
-systemctl start --wait clawdinator-repo-seed.service
+wait_for_service() {
+  local service="$1"
+  local timeout="${2:-300}"
+  local waited=0
+
+  systemctl start "${service}"
+  while true; do
+    if systemctl is-active --quiet "${service}"; then
+      return 0
+    fi
+    if systemctl is-failed --quiet "${service}"; then
+      systemctl status "${service}" --no-pager
+      return 1
+    fi
+    if [ "${waited}" -ge "${timeout}" ]; then
+      echo "Timed out waiting for ${service}" >&2
+      systemctl status "${service}" --no-pager
+      return 1
+    fi
+    sleep 2
+    waited=$((waited + 2))
+  done
+}
+
+wait_for_service "clawdinator-bootstrap.service" 300
+wait_for_service "clawdinator-repo-seed.service" 300
 
 if [ ! -d /var/lib/clawd/repos/clawdinators ]; then
   echo "clawdinator repo missing after bootstrap" >&2
