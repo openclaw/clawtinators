@@ -67,7 +67,7 @@ The opinionated bits for running AI coding agents:
 - **GitHub integration**: Monitors issues/PRs, mints short-lived tokens via GitHub App
 - **Hive-mind memory**: Shared EFS mount for cross-instance state
 - **Personality system**: SOUL.md, IDENTITY.md, workspace templates
-- **Self-update**: Timer-based flake update + nixos-rebuild
+- **Self-update**: Timer--based flake update + nixos-rebuild 
 
 ---
 
